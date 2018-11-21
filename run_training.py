@@ -1,6 +1,6 @@
 ## EXTERNAL
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 import pickle
 import shutil
 import torch
@@ -13,7 +13,7 @@ import numpy as np
 import sklearn
 import time
 import os
-import random 
+import random
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
@@ -52,7 +52,7 @@ for n in range(num_iterations):
 
     feats = data.iloc[:,2:]
 
-    # This is a scaling of the inputs such that they are in an appropriate range    
+    # This is a scaling of the inputs such that they are in an appropriate range
     feats["Close Price"].loc[:] = feats["Close Price"].loc[:]/1000
     feats["Open Price"].loc[:] = feats["Open Price"].loc[:]/1000
     feats["High Price"].loc[:] = feats["High Price"].loc[:]/1000
@@ -72,7 +72,7 @@ for n in range(num_iterations):
     feats["WVAD"].loc[:] = feats["WVAD"].loc[:]/100000000
     feats["US Dollar Index"].loc[:] = feats["US Dollar Index"].loc[:]/100
     feats["Federal Fund Rate"].loc[:] = feats["Federal Fund Rate"].loc[:]
-    
+
     data_close = feats["Close Price"].copy()
     data_close_new = data_close
 
@@ -109,13 +109,13 @@ for n in range(num_iterations):
     feats_norm_train = scaler.transform(feats_train)
     feats_norm_validate = scaler.transform(feats_validate)
     feats_norm_test = scaler.transform(feats_test)
-    """    
+    """
     data_close = pd.Series(np.concatenate((y_train, y_validate, y_test)))
-    
+
     feats_norm_train = feats_train.copy()
     feats_norm_validate = feats_validate.copy()
     feats_norm_test = feats_test.copy()
-    
+
     # ---------------------------------------------------------------------------
     # ----------------------- STEP 2.1: DENOISE USING DWT -----------------------
     # ---------------------------------------------------------------------------
@@ -124,7 +124,7 @@ for n in range(num_iterations):
         feats_norm_train[:,i] = waveletSmooth(feats_norm_train[:,i], level=1)[-len(feats_norm_train):]
 
     # for the validation we have to do the transform using training data + the current and past validation data
-    # i.e. we CAN'T USE all the validation data because we would then look into the future 
+    # i.e. we CAN'T USE all the validation data because we would then look into the future
     temp = np.copy(feats_norm_train)
     feats_norm_validate_WT = np.copy(feats_norm_validate)
     for j in range(feats_norm_validate.shape[0]):
@@ -134,7 +134,7 @@ for n in range(num_iterations):
             feats_norm_validate_WT[j,i] = waveletSmooth(temp[:,i], level=1)[-1]
 
     # for the test we have to do the transform using training data + validation data + current and past test data
-    # i.e. we CAN'T USE all the test data because we would then look into the future 
+    # i.e. we CAN'T USE all the test data because we would then look into the future
     temp_train = np.copy(feats_norm_train)
     temp_val = np.copy(feats_norm_validate)
     temp = np.concatenate((temp_train, temp_val))
@@ -144,7 +144,7 @@ for n in range(num_iterations):
         temp = np.append(temp, np.expand_dims(feats_norm_test[j,:], axis=0), axis=0)
         for i in range(feats_norm_test.shape[1]):
             feats_norm_test_WT[j,i] = waveletSmooth(temp[:,i], level=1)[-1]
-    
+
     # ---------------------------------------------------------------------------
     # ------------- STEP 3: ENCODE FEATURES USING STACKED AUTOENCODER -----------
     # ---------------------------------------------------------------------------
@@ -157,9 +157,9 @@ for n in range(num_iterations):
     n_epoch=100#20000
 
     # ---- train using training data
-    
+
     # The n==0 statement is done because we only want to initialize the network once and then keep training
-    # as we move through time 
+    # as we move through time
 
     if n == 0:
         auto1 = Autoencoder(feats_norm_train.shape[1], num_hidden_1)
@@ -183,21 +183,21 @@ for n in range(num_iterations):
     auto2_out = torch.autograd.Variable(torch.from_numpy(auto2_out.astype(np.float32)))
     auto3_out = auto3.encoder(auto2_out).data.numpy()
     auto4.fit(auto3_out, n_epoch=n_epoch)
-    
+
 
     # Change to evaluation mode, in this mode the network behaves differently, e.g. dropout is switched off and so on
-    auto1.eval()        
+    auto1.eval()
     auto2.eval()
     auto3.eval()
     auto4.eval()
-    
+
     X_train = feats_norm_train
     X_train = torch.autograd.Variable(torch.from_numpy(X_train.astype(np.float32)))
     train_encoded = auto4.encoder(auto3.encoder(auto2.encoder(auto1.encoder(X_train))))
     train_encoded = train_encoded.data.numpy()
 
-    # ---- encode validation and test data using autoencoder trained only on training data 
-    X_validate = feats_norm_validate_WT   
+    # ---- encode validation and test data using autoencoder trained only on training data
+    X_validate = feats_norm_validate_WT
     X_validate = torch.autograd.Variable(torch.from_numpy(X_validate.astype(np.float32)))
     validate_encoded = auto4.encoder(auto3.encoder(auto2.encoder(auto1.encoder(X_validate))))
     validate_encoded = validate_encoded.data.numpy()
@@ -206,14 +206,14 @@ for n in range(num_iterations):
     X_test = torch.autograd.Variable(torch.from_numpy(X_test.astype(np.float32)))
     test_encoded = auto4.encoder(auto3.encoder(auto2.encoder(auto1.encoder(X_test))))
     test_encoded = test_encoded.data.numpy()
-    
+
     # switch back to training mode
-    auto1.train()        
+    auto1.train()
     auto2.train()
     auto3.train()
     auto4.train()
 
-    
+
     # ---------------------------------------------------------------------------
     # -------------------- STEP 4: PREPARE TIME-SERIES --------------------------
     # ---------------------------------------------------------------------------
@@ -241,10 +241,10 @@ for n in range(num_iterations):
 
     x_test = x_te
     x_validate = x_v
-    x_train = x 
+    x_train = x
 
-    y_test = y_te 
-    y_validate = y_v 
+    y_test = y_te
+    y_validate = y_v
     y_train = y
 
     y_train = y_train.as_matrix()
@@ -289,7 +289,7 @@ for n in range(num_iterations):
 
     optimizer = optim.Adam(params=seq.parameters(), lr=0.0005)
 
-    start_epoch = 0 
+    start_epoch = 0
     epochs = 1#5000
 
     global_loss_val = np.inf
@@ -300,14 +300,14 @@ for n in range(num_iterations):
         seq.train()
         loss_train = 0
 
-        # shuffle ONLY training set        
+        # shuffle ONLY training set
         combined = list(zip(x_train, y_train))
         random.shuffle(combined)
         x_train=[]
         y_train=[]
         x_train[:], y_train[:] = zip(*combined)
-        
-        # initialize trainloader with newly shuffled training data        
+
+        # initialize trainloader with newly shuffled training data
         trainloader = ExampleDataset(x_train, y_train, batchsize)
 
         pred_train = []
@@ -341,9 +341,9 @@ for n in range(num_iterations):
             plt.plot(pred_train)
             plt.plot(target_train)
             plt.show()
-            
+
             loss_val, pred_val, target_val = evaluate_lstm(dataloader=valloader, model=seq, criterion=criterion)
-            
+
             plt.scatter(range(len(pred_val)), pred_val)
             plt.scatter(range(len(pred_val)), target_val)
             plt.show()
@@ -359,7 +359,7 @@ for n in range(num_iterations):
 
             save_checkpoint({'epoch': i + 1, 'state_dict': seq.state_dict()}, is_best=False, filename='checkpoint_lstm.pth.tar')
 
-            print("LOSS TRAIN: " + str(float(loss_train)))        
+            print("LOSS TRAIN: " + str(float(loss_train)))
             print("LOSS VAL: " + str(float(loss_val)))
             print(i)
 
@@ -387,7 +387,7 @@ for n in range(num_iterations):
 
     temp2 = y_test.as_matrix().flatten().tolist()
     y_test_lst.extend(temp2)
-        
+
     plt.plot(preds_test)
     plt.plot(y_test_lst)
     plt.scatter(range(len(preds_test)), preds_test)
@@ -406,4 +406,3 @@ for n in range(num_iterations):
     plt.legend()
     plt.savefig("performance_article_way.pdf")
     plt.close()
-

@@ -1,6 +1,6 @@
 ## EXTERNAL
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 import pickle
 import shutil
 import torch
@@ -13,7 +13,7 @@ import numpy as np
 import sklearn
 import time
 import os
-import random 
+import random
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
@@ -35,7 +35,7 @@ def prepare_data_lstm(x_encoded, y_close, time_steps, log_return=True, train=Tru
     else:
         y_close = (np.log(y_close) - np.log(y_close.shift(1)))[1:] # the log return, i.e. ln(y_t/y_(t-1))
 
-    if train:           
+    if train:
         y = y_close[time_steps-1:]
     else:
         y=y_close
@@ -131,4 +131,3 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar', name="checkpo
     torch.save(state, filename)
     if is_best:
         shutil.copyfile(filename, 'runs/%s/'%(name) + 'model_best.pth.tar')
-

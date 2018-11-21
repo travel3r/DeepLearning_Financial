@@ -1,4 +1,4 @@
-import pandas as pd 
+import pandas as pd
 import numpy as np
 import sklearn
 import torch
@@ -38,7 +38,7 @@ class Autoencoder(torch.nn.Module):
         hidden_mean = torch.mean(hidden, dim=0)
         sparsity_loss = torch.sum(self.kl_divergence(self.sparsity_target, hidden_mean))
         return self.decoder(hidden), sparsity_loss
-    # end method        
+    # end method
 
 
     def kl_divergence(self, p, q):
@@ -56,7 +56,7 @@ class Autoencoder(torch.nn.Module):
                 outputs, sparsity_loss = self.forward(inputs)
 
                 l1_loss = self.l1_loss(outputs, inputs)
-                loss = l1_loss + self.sparsity_weight * sparsity_loss                   
+                loss = l1_loss + self.sparsity_weight * sparsity_loss
                 self.optimizer.zero_grad()                             # clear gradients for this training step
                 loss.backward()                                        # backpropagation, compute gradients
                 self.optimizer.step()                                  # apply gradients
