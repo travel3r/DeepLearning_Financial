@@ -28,7 +28,7 @@ class Autoencoder(torch.nn.Module):
         self.decoder = torch.nn.Sequential(
             torch.nn.Linear(self.n_hidden, self.n_in))#,
             #torch.nn.Sigmoid())
-        self.l1_loss = torch.nn.L1Loss(size_average=False)
+        self.l1_loss = torch.nn.L1Loss(reduction='sum')
         self.optimizer = torch.optim.Adam(self.parameters(), self.lr, weight_decay=self.weight_decay)
     # end method
 
@@ -63,7 +63,7 @@ class Autoencoder(torch.nn.Module):
                 if local_step % 50 == 0:
                     print ("Epoch %d/%d | Step %d/%d | train loss: %.4f | l1 loss: %.4f | sparsity loss: %.4f"
                            %(epoch+1, n_epoch, local_step, len(X)//batch_size,
-                             loss.data[0], l1_loss.data[0], sparsity_loss.data[0]))
+                             loss.item(), l1_loss.item(), sparsity_loss.item()))
     # end method
 
 

@@ -82,12 +82,14 @@ for n in range(num_iterations):
     validate = feats[-2*step_size:-step_size]
     train = feats[:-2*step_size]
 
-    y_test = data_close_new[-step_size:].as_matrix()
-    y_validate = data_close_new[-2*step_size:-step_size].as_matrix()
-    y_train = data_close_new[:-2*step_size].as_matrix()
-    feats_train = train.as_matrix().astype(np.float)
-    feats_validate = validate.as_matrix().astype(np.float)
-    feats_test = test.as_matrix().astype(np.float)
+
+
+    y_test = data_close_new[-step_size:].values
+    y_validate = data_close_new[-2*step_size:-step_size].values
+    y_train = data_close_new[:-2*step_size].values
+    feats_train = train.values.astype(np.float)
+    feats_validate = validate.values.astype(np.float)
+    feats_test = test.values.astype(np.float)
 
     # ---------------------------------------------------------------------------
     # ----------------------- STEP 2.0: NORMALIZE DATA --------------------------
@@ -247,7 +249,7 @@ for n in range(num_iterations):
     y_validate = y_v
     y_train = y
 
-    y_train = y_train.as_matrix()
+    y_train = y_train.values
 
     # ---------------------------------------------------------------------------
     # ------------- STEP 5: TIME-SERIES REGRESSION USING LSTM -------------------
@@ -325,7 +327,7 @@ for n in range(num_iterations):
 
                 optimizer.zero_grad()
                 out = seq(input)
-                loss = criterion(out, target)
+                loss = criterion(out.view(len(target)), target)
 
                 loss_train += float(loss.data.numpy())
                 pred_train.extend(out.data.numpy().flatten().tolist())
@@ -385,7 +387,7 @@ for n in range(num_iterations):
 
     print("LOSS TEST: " + str(float(loss_test)))
 
-    temp2 = y_test.as_matrix().flatten().tolist()
+    temp2 = y_test.values.flatten().tolist()
     y_test_lst.extend(temp2)
 
     plt.plot(preds_test)

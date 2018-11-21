@@ -82,11 +82,11 @@ def evaluate_lstm(dataloader, model, criterion):
             sample_x = np.stack(sample_x)
             input = Variable(torch.FloatTensor(sample_x), requires_grad=False)
             input = torch.transpose(input, 0, 1)
-            target = Variable(torch.FloatTensor(sample["y"].as_matrix()), requires_grad=False)
+            target = Variable(torch.FloatTensor(sample["y"].values), requires_grad=False)
 
             out = model(input)
 
-            loss = criterion(out, target)
+            loss = criterion(out.view(len(target)), target)
 
             loss_val += float(loss.data.numpy())
             pred_val.extend(out.data.numpy().flatten().tolist())
